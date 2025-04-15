@@ -2,7 +2,7 @@
     "name": "helloapp",
     "version": "1.0.0",
     "description": "node app ",
-    "main": "hello_app.js",
+    "main": "heroku.js",
     "scripts": {
     "start": "node heroku.js"
   },
