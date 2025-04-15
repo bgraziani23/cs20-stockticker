@@ -1,5 +1,5 @@
 {
-    "name": "helloapp",
+    "name": "herokuapp",
     "version": "1.0.0",
     "description": "node app ",
     "main": "heroku.js",
