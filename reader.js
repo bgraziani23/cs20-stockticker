@@ -1,7 +1,9 @@
+// Requires
 const fs = require('fs');
 const readline = require('readline');
 const MongoClient = require('mongodb').MongoClient;
 
+// Initial variables
 const connStr = "mongodb+srv://brendangraziani:mongoDBpwCC001929@cluster0.w7orxfl.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 const filePath = 'companies-1.csv';
 

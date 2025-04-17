@@ -1,7 +1,9 @@
+// Requires
 const http = require('http');
 const url = require('url');
 const MongoClient = require('mongodb').MongoClient;
 
+// Initial variables
 const connStr = "mongodb+srv://brendangraziani:mongoDBpwCC001929@cluster0.w7orxfl.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 const port = process.env.PORT || 3000;
 
@@ -35,19 +37,12 @@ http.createServer(async function (req, res) {
                 return res.end();
             }
             
-            
-            // const client = await MongoClient.connect(connStr, { useUnifiedTopology: true });
-            
             // Connect to mongoDB
             const client = await MongoClient.connect(connStr);
 
             // Get the right database and collection
             const dbo = client.db("Stock"); // Make sure this is the exact DB name
             const collection = dbo.collection("PublicCompanies"); // And collection name
-
-            // const searchQuery = (searchType === 'name') 
-            //     ? { name: { $regex: new RegExp(query, 'i') } }
-            //     : { ticker: { $regex: new RegExp(query, 'i') } };
 
             let searchQuery = {};
             if (searchType === 'name') {
@@ -95,6 +90,3 @@ http.createServer(async function (req, res) {
         return res.end();
     }
 }).listen(port);
-// }).listen(port, () => {
-//     console.log("Server running on port " + port);
-// });
