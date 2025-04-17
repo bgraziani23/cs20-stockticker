@@ -33,74 +33,63 @@ const MongoClient = require('mongodb').MongoClient;
 const connStr = "mongodb+srv://brendangraziani:mongoDBpwCC001929@cluster0.w7orxfl.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 const port = process.env.PORT || 3000;
 
-http.createServer(function (req, res) {
+http.createServer(async function (req, res) {
     res.writeHead(200, {'Content-Type': 'text/html'});
-    let urlObj = url.parse(req.url, true);
+    const urlObj = url.parse(req.url, true);
 
-    if (urlObj.pathname === "/") {
-        // Home View: HTML Form
-        res.write("<h2>Stock Lookup</h2>");
-        res.write("<form method='get' action='/process'>");
-        res.write("Search by: ");
-        res.write("<input type='radio' name='searchType' value='name' checked> Company Name ");
-        res.write("<input type='radio' name='searchType' value='ticker'> Ticker Symbol<br><br>");
-        res.write("Enter value: <input type='text' name='query'><br><br>");
-        res.write("<input type='submit' value='Search'>");
-        res.write("</form>");
-        res.end();
-
-    } else if (urlObj.pathname === "/process") {
-        // Process View
-        let searchType = urlObj.query.searchType;
-        let query = urlObj.query.query;
-
-        if (!query) {
-            res.write("<p>No query entered. Please go back and try again.</p>");
+    try {
+        if (urlObj.pathname === "/") {
+            res.write("<h2>Stock Lookup</h2>");
+            res.write("<form method='get' action='/process'>");
+            res.write("Search by: ");
+            res.write("<input type='radio' name='searchType' value='name' checked> Company Name ");
+            res.write("<input type='radio' name='searchType' value='ticker'> Ticker Symbol<br><br>");
+            res.write("Enter value: <input type='text' name='query'><br><br>");
+            res.write("<input type='submit' value='Search'>");
             return res.end();
-        }
 
-        MongoClient.connect(connStr, async function(err, db) {
-            if (err) {
-                console.error("Connection error:", err);
-                res.write("<p>Error connecting to the database.</p>");
+        } else if (urlObj.pathname === "/process") {
+            const searchType = urlObj.query.searchType;
+            const query = urlObj.query.query;
+
+            if (!query) {
+                res.write("<p>No query entered. Please go back and try again.</p>");
                 return res.end();
             }
 
-            const dbo = db.db("Stock");
-            const collection = dbo.collection("PublicCompanies");
+            const client = await MongoClient.connect(connStr, { useUnifiedTopology: true });
+            const dbo = client.db("Stock"); // Make sure this is the exact DB name
+            const collection = dbo.collection("PublicCompanies"); // And collection name
 
-            let searchQuery = {};
-            if (searchType === 'name') {
-                searchQuery = { name: { $regex: new RegExp(query, 'i') } }; // case-insensitive partial match
+            const searchQuery = (searchType === 'name') 
+                ? { name: { $regex: new RegExp(query, 'i') } }
+                : { ticker: { $regex: new RegExp(query, 'i') } };
+
+            const results = await collection.find(searchQuery).toArray();
+
+            if (results.length === 0) {
+                res.write("<p>No results found.</p>");
             } else {
-                searchQuery = { ticker: { $regex: new RegExp(query, 'i') } };
+                res.write("<h3>Search Results:</h3><ul>");
+                results.forEach(doc => {
+                    const price = doc.price?.toFixed ? `$${doc.price.toFixed(2)}` : "N/A";
+                    res.write(`<li><strong>${doc.name}</strong> (${doc.ticker}): ${price}</li>`);
+                });
+                res.write("</ul>");
             }
 
-            try {
-                const results = await collection.find(searchQuery).toArray();
-                if (results.length === 0) {
-                    res.write("<p>No results found.</p>");
-                } else {
-                    res.write("<h3>Search Results:</h3><ul>");
-                    results.forEach(doc => {
-                        console.log(doc);
-                        res.write(`<li><strong>${doc.name}</strong> (${doc.ticker}): $${doc.price.toFixed(2)}</li>`);
-                    });
-                    res.write("</ul>");
-                }
-            } catch (searchErr) {
-                console.error("Search error:", searchErr);
-                res.write("<p>Error searching the database.</p>");
-            } finally {
-                db.close();
-                res.end();
-            }
-        });
-    } else {
-        res.write("<p>404 Not Found</p>");
-        res.end();
+            await client.close();
+            return res.end();
+
+        } else {
+            res.write("<p>404 Not Found</p>");
+            return res.end();
+        }
+    } catch (err) {
+        console.error("Server error:", err);
+        res.write("<p>Internal server error.</p>");
+        return res.end();
     }
-
 }).listen(port, () => {
     console.log("Server running on port " + port);
 });
