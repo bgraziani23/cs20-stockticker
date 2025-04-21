@@ -41,8 +41,8 @@ http.createServer(async function (req, res) {
             const client = await MongoClient.connect(connStr);
 
             // Get the right database and collection
-            const dbo = client.db("Stock"); // Make sure this is the exact DB name
-            const collection = dbo.collection("PublicCompanies"); // And collection name
+            const dbo = client.db("Stock");
+            const collection = dbo.collection("PublicCompanies");
 
             let searchQuery = {};
             if (searchType === 'name') {
@@ -56,12 +56,16 @@ http.createServer(async function (req, res) {
 
             // Display the results to the page (error message if none)
             if (results.length === 0) {
+                console.log('No results found.');
+                // console.log(`No results found.`);
                 res.write("<p>No results found.</p>");
             } else {
+                // console.log(`Search results:\n`);
+                console.log('Search results:\n');
                 res.write("<h3>Search Results:</h3><ul>");
                 // Loop through each document with matching name/ticker
                 results.forEach(doc => {
-                    let price;
+                    var price;
                     // If price exists and it's a number, display it
                     if (doc.price && typeof doc.price === 'number') {
                         price = "$" + Math.round(doc.price * 100) / 100;
@@ -69,6 +73,7 @@ http.createServer(async function (req, res) {
                     } else {
                         price = "N/A";
                     }
+                    console.log(`${doc.name} (${doc.ticker}): ${price}`);
                     res.write("<li><strong>" + doc.name + "</strong> (" + doc.ticker + "): " + price + "</li>");
                 });
                 res.write("</ul>");
