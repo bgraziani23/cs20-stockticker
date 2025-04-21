@@ -57,10 +57,8 @@ http.createServer(async function (req, res) {
             // Display the results to the page (error message if none)
             if (results.length === 0) {
                 console.log('No results found.');
-                // console.log(`No results found.`);
                 res.write("<p>No results found.</p>");
             } else {
-                // console.log(`Search results:\n`);
                 console.log('Search results:\n');
                 res.write("<h3>Search Results:</h3><ul>");
                 // Loop through each document with matching name/ticker
